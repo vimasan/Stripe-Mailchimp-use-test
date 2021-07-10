@@ -1,0 +1,1 @@
+# Stripe-Mailchimp-use-test
