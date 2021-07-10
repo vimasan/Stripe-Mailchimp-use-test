@@ -152,7 +152,7 @@ async function main() {
     try {
         //add starter products to stripe
         for(const p of productListInitial) {
-            //addProductAndPrice(p.name, p.amount, p.currency);
+            addProductAndPrice(p.name, p.amount, p.currency);
         }
 
         //Get stripe product listing
