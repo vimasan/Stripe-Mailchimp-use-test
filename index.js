@@ -11,7 +11,7 @@ const mailchimp = require('@mailchimp/mailchimp_transactional')('p-fFnuEdlO75138
 
 const toEmail = 'victor@jumesa.com';
 const fromEmail = 'victor@jumesa.com';
-const constParallelCount = 2;
+const constParallelCount = 2; //Number of simultaneous requests
 
 const productListInitial = [
     {name: 'Product 1', amount: 500, currency: 'eur'},
