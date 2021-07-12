@@ -11,6 +11,7 @@ const mailchimp = require('@mailchimp/mailchimp_transactional')('p-fFnuEdlO75138
 
 const toEmail = 'victor@jumesa.com';
 const fromEmail = 'victor@jumesa.com';
+const constParallelCount = 2;
 
 const productListInitial = [
     {name: 'Product 1', amount: 500, currency: 'eur'},
@@ -84,6 +85,32 @@ async function addProductAndPrice(name, amount, currency) {
 }
 
 /**
+ * process price promises and returns product class
+ * @param  {promise}
+ * @param  {list}
+ * @return  {array}
+ */
+async function processPricePromises(pricePromises, productList) {
+    arrayClass = [];
+    const priceList = await Promise.all(pricePromises);
+
+    for(const price of priceList) {                    
+        const prodData = productList.data.find(el => el.id === price.data[0].product);                        
+        const arrayPrices = [];  
+        for(const pricData of price.data) {
+            arrayPrices.push(new Price(pricData.unit_amount, pricData.currency));
+            
+        }
+
+        const product = new Product(prodData.id, prodData.name, arrayPrices);
+        arrayClass.push(product);
+                                
+    }   
+    
+    return arrayClass;
+}
+
+/**
  * Generate the html report
  * @param  {array}
  * @return  {string}
@@ -152,13 +179,13 @@ async function main() {
     try {
         //add starter products to stripe
         for(const p of productListInitial) {
-            addProductAndPrice(p.name, p.amount, p.currency);
+            await addProductAndPrice(p.name, p.amount, p.currency);
         }
 
-        //Get stripe product listing
-        let arrayProduct = [];
+        let arrayClassProduct = [];
+        //MODE 1 --> Get stripe product listing mode secuential        
+        /*
         const productList = await stripe.products.list();
-
         for(const prodData of productList.data) {            
              
             const priceList = await stripe.prices.list({
@@ -172,13 +199,47 @@ async function main() {
             }
 
             const product = new Product(prodData.id, prodData.name, arrayPrices)
-            arrayProduct.push(product);                                                
+            arrayClassProduct.push(product);                                                
                                     
-        }        
-
-        //generate report for send
-        const txtReport = generateReport(arrayProduct);    
+        }
+        */    
         
+        //MODE 2 --> Get stripe product listing mode with promises
+        let priceListPromises = [];
+        const productList = await stripe.products.list();
+
+        let contParallel = constParallelCount;
+        for(const prodData of productList.data) {            
+            
+            if(contParallel > 0) {
+                priceListPromises.push(
+                    stripe.prices.list({
+                        product: prodData.id
+                    })
+                );
+
+                contParallel--;
+            }
+
+            if(contParallel === 0 ) {
+                const arrayClassProductAux = await processPricePromises(priceListPromises, productList);
+                arrayClassProduct = arrayClassProduct.concat(arrayClassProductAux);
+                                                  
+                priceListPromises = [];                
+                contParallel = constParallelCount;
+            }            
+            
+        }           
+        
+        //// Process the remaining elements
+        if(contParallel > 0) {
+            const arrayClassProductAux = await processPricePromises(priceListPromises, productList);
+            arrayClassProduct = arrayClassProduct.concat(arrayClassProductAux);
+        }        
+        
+        //generate report for send
+        const txtReport = generateReport(arrayClassProduct);           
+                
         //send mail with the report
         const returnEmail = await sendEmail(txtReport);
         console.log('Mail sent to mailChimp --> ');
