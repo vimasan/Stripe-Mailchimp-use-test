@@ -7,7 +7,7 @@ Project is done using following technologies:
 ## Prerequisites
 Install [node.js](https://nodejs.org) - download and install setup
 
-## Instalacion
+## Installation
 * Download the code from the github repository
 * Open the command line and access the download directory, run: `npm install`
 
