@@ -15,7 +15,7 @@ Install [node.js](https://nodejs.org) - download and install setup
 * In command line access the download directory.
 * Run or `node index.js` 
 
-## Usage aplication
+## Usage application
 The script adds test products with their Stripe prices.
 ![productos_stripe](https://user-images.githubusercontent.com/72967664/125158667-c86c6380-e172-11eb-867f-a8e4e75eaa6b.png)
 Download the products from Stripe and generate an html report that you send by mail using Mailchimp / Mandrill
