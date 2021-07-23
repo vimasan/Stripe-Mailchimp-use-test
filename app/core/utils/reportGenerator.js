@@ -1,5 +1,7 @@
 const CONST_CHAR_MILISECOND = 13;
-
+//-----------------------------------------------------------------------------
+//-- FUNCTIONS
+//-----------------------------------------------------------------------------
 /**
  * Format price with decimal point
  * @param {*} number 
@@ -7,6 +9,10 @@ const CONST_CHAR_MILISECOND = 13;
  */
 function priceFormat(number) {
     return number / 100;
+}
+
+function priceTotal(amount, quantity, currency) {
+    return priceFormat(amount * quantity) + ' ' + currency 
 }
 
 /**
@@ -88,6 +94,7 @@ function generateReportVending(arrayVending) {
                     '<th style="text-align:left">Email</th>' + 
                     '<th style="text-align:left">Product</th>' +
                     '<th style="text-align:left">Price</th>' +
+                    '<th style="text-align:left">Total</th>' +
                     '<th style="text-align:left">Start Date</th>' +
                     '<th style="text-align:left">Status</th>' +
                     '<th style="text-align:left">Start Trial</th>' +                                    
@@ -100,6 +107,8 @@ function generateReportVending(arrayVending) {
                                  ven.plan.quantity + ' x ' + 
                                  priceFormat(ven.plan.product.price.amount) + ' ' + 
                                     ven.plan.product.price.currency +  '</td><td>' + 
+                                 priceTotal(ven.plan.product.price.amount, ven.plan.quantity, 
+                                    ven.plan.product.price.currency) + '</td><td>' + 
                                  dateFormat(ven.plan.startDate) + '</td><td>' + 
                                  ven.plan.status + '</td><td>' + 
                                  dateFormat(ven.plan.startTrial) + '</td><td>' +                             
@@ -112,24 +121,29 @@ function generateReportVending(arrayVending) {
     return report.join('');
 }
 
-/**
- * Generate the html report
- * @param  {array}
- * @param  {array}
- * @return  {string}
- */
- function generateReport(arrayProduct, arrayVending) {
-    const txtReport = '<h1>Report HTML</h1>';
-    
-    const txtReportProduct = generateReportProduct(arrayProduct);
-    const txtReportVending = generateReportVending(arrayVending);
-    
-    return txtReport.concat(txtReportProduct, txtReportVending);
+//-----------------------------------------------------------------------------
+//-- CLASS
+//-----------------------------------------------------------------------------
+class ReportGenerator {
+    constructor(){}
+
+    /**
+     * Generate the html report
+     * @param  {array}
+     * @param  {array}
+     * @return  {string}
+     */
+    generateReport(arrayProduct, arrayVending) {
+        const txtReport = '<h1>Report HTML</h1>';
+        
+        const txtReportProduct = generateReportProduct(arrayProduct);
+        const txtReportVending = generateReportVending(arrayVending);
+        
+        return txtReport.concat(txtReportProduct, txtReportVending);
+    }
 }
 
 //-----------------------------------------------------------------------------
 //-- Exports module
 //-----------------------------------------------------------------------------
-module.exports = {
-    'generateReport': generateReport
-}
+module.exports = ReportGenerator;

@@ -65,6 +65,16 @@ function addPrice(idProduct, amount, currency) {
     return arrayClass;
 }
 
+function generateClassVending(objSuscription, objCustomer, objProduct) {
+    const customerClass = new Customer(objCustomer.id, objCustomer.name, objCustomer.email);
+    const priceClass = new Price(objSuscription.plan.id, objSuscription.plan.amount, objSuscription.plan.currency);
+    const productClass = new Product(objProduct.id, objProduct.name, priceClass);
+    const planClass = new Plan(productClass, objSuscription.quantity, objSuscription.status, 
+        objSuscription.start_date, objSuscription.trial_start, objSuscription.trial_end);
+
+    return new Vending(customerClass, planClass);
+}
+
 //-----------------------------------------------------------------------------
 //-- CLASS
 //-----------------------------------------------------------------------------
@@ -169,7 +179,7 @@ class StripeService {
      * Get stripe vending listing mode secuential
      * @returns 
      */
-    async getListVending() {
+    async getListVendingSequential() {
         let arrayClassVending = [];
 
         const subscriptionList = await stripe.subscriptions.list();
@@ -178,22 +188,48 @@ class StripeService {
 
             const objCustomer = await stripe.customers.retrieve(objSuscription.customer);                        
             const objProduct = await stripe.products.retrieve(objSuscription.plan.product);
-
-            const customerClass = new Customer(objCustomer.id, objCustomer.name, objCustomer.email);
-            const priceClass = new Price(objSuscription.plan.id, objSuscription.plan.amount, objSuscription.plan.currency);
-            const productClass = new Product(objProduct.id, objProduct.name, priceClass);
-            const planClass = new Plan(productClass, objSuscription.quantity, objSuscription.status, 
-                objSuscription.start_date, objSuscription.trial_start, objSuscription.trial_end);
-
-            const vendingClass = new Vending(customerClass, planClass);            
+          
+            const vendingClass = generateClassVending(objSuscription, objCustomer, objProduct);
 
             arrayClassVending.push(vendingClass);
 
         }
         
         return arrayClassVending;
-
     }
+
+    /**
+     * Get stripe vending listing mode paralell
+     * @returns 
+     */
+     async getListVendingParallel() {
+        let arrayClassVending = [];
+        let customerListPromises = [];
+        let productListPromises = [];
+
+        const subscriptionList = await stripe.subscriptions.list();
+
+        for(const objSuscription of subscriptionList.data) {
+            customerListPromises.push(stripe.customers.retrieve(objSuscription.customer));
+            productListPromises.push(stripe.products.retrieve(objSuscription.plan.product));
+
+        }
+
+        const customerList = await Promise.all(customerListPromises);
+        const productList = await Promise.all(productListPromises);
+
+        for(const objSuscription of subscriptionList.data) {
+            const objProduct = productList.find(el => el.id === objSuscription.plan.product);
+            const objCustomer = customerList.find(el => el.id === objSuscription.customer);
+       
+            const vendingClass = generateClassVending(objSuscription, objCustomer, objProduct);    
+
+            arrayClassVending.push(vendingClass);
+
+        }
+        
+        return arrayClassVending;
+    }    
 
 }
 

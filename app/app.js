@@ -6,8 +6,6 @@
 //-----------------------------------------------------------------------------
 // REQUIRED AND CONSTANT
 //-----------------------------------------------------------------------------
-const reportGenerator = require('./core/utils/reportGenerator');
-
 const productListInitial = [
     {name: 'Product 1 m2', price: [
         {amount: 500, currency: 'eur'}] 
@@ -24,9 +22,10 @@ const productListInitial = [
 //-- PROGRAM
 //-----------------------------------------------------------------------------
 class App {
-    constructor(stripeService, mailService) {
+    constructor(stripeService, mailService, reportGenerator) {
         this.stripeService = stripeService;
         this.mailService = mailService;
+        this.reportGenerator = reportGenerator;
     }
 
     async main(toEmail, fromEmail, parallelCount, genInitialData ) {
@@ -52,10 +51,11 @@ class App {
             }
 
             //Generate vending listing
-            const arrayClassVending = await this.stripeService.getListVending();     
+            //const arrayClassVending = await this.stripeService.getListVendingSequential();   
+            const arrayClassVending = await this.stripeService.getListVendingParallel();
                                 
             //generate report for send
-            const txtReport = reportGenerator.generateReport(arrayClassProduct, arrayClassVending);           
+            const txtReport = this.reportGenerator.generateReport(arrayClassProduct, arrayClassVending);           
                                 
             //send mail with the report
             const objReturnEmail = await this.mailService.sendEmail(txtReport, toEmail, fromEmail);
